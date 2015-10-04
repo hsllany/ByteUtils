@@ -6,6 +6,16 @@ import java.util.List;
 
 import test.com.ubirouting.bytelib.TestClass;
 
+/**
+ * Convert a object to bytes. Single Instance invoke by {@code getInstance()}
+ * <br/>
+ * To use this class, Object should implements {@code toBytes} interface, and
+ * override the {@code format()} function. Then you can invoke the
+ * {@code toBytes()} to convert object to byte array in the order you set up.
+ * 
+ * @author YangTao
+ *
+ */
 public class ByteUtils {
 
 	private static ByteUtils instance = null;
@@ -158,9 +168,23 @@ public class ByteUtils {
 		}
 	}
 
-	public byte[] toBytes(ToBytes j) throws ToByteComplieException, IllegalArgumentException, IllegalAccessException {
-		List<Token> tokenList = complie(j);
-		return export(j, tokenList);
+	/**
+	 * To convert object to byte array.
+	 * 
+	 * @param object
+	 *            which implements {@code toBytes} interface
+	 * @return byte array following the format you set up in {@code format()}
+	 * @throws ToByteComplieException
+	 *             wrong format string.
+	 * @throws IllegalArgumentException
+	 *             no such field in your object.
+	 * @throws IllegalAccessException
+	 *             can't access the field in your object
+	 */
+	public byte[] toBytes(ToBytes object)
+			throws ToByteComplieException, IllegalArgumentException, IllegalAccessException {
+		List<Token> tokenList = complie(object);
+		return export(object, tokenList);
 	}
 
 	public static class Token {
