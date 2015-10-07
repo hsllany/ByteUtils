@@ -2,13 +2,12 @@ package java.com.ubirouting.bytelib;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import test.com.ubirouting.bytelib.TestClass;
 
 /**
  * Convert a object to bytes. Single Instance invoke by {@code getInstance()}
@@ -36,10 +35,10 @@ public class ByteUtils {
 	/**
 	 * Map which stores the complies result.
 	 */
-	private Map<Class<?>, List<Token>> mComplieList;
+	private Map<Class<?>, List<Token>> complieList;
 
 	private ByteUtils() {
-		mComplieList = Collections.synchronizedMap(new HashMap<Class<?>, List<Token>>());
+		complieList = Collections.synchronizedMap(new HashMap<Class<?>, List<Token>>());
 	}
 
 	private List<Token> complie(ToBytes j) throws ToByteComplieException {
@@ -47,8 +46,8 @@ public class ByteUtils {
 		/**
 		 * If j has been complied, than return the compile result immediately.
 		 */
-		if (mComplieList.containsKey(j.getClass()))
-			return mComplieList.get(j.getClass());
+		if (complieList.containsKey(j.getClass()))
+			return complieList.get(j.getClass());
 
 		List<Token> tokenList = new LinkedList<>();
 
@@ -93,7 +92,7 @@ public class ByteUtils {
 
 		}
 
-		mComplieList.put(j.getClass(), tokenList);
+		complieList.put(j.getClass(), tokenList);
 
 		return tokenList;
 	}
@@ -110,59 +109,56 @@ public class ByteUtils {
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
-	private byte[] export(ToBytes j, List<Token> tokenList) throws NoSuchMethodException, SecurityException,
+	private ByteBuffer export(ToBytes j, List<Token> tokenList) throws NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		byte[] export = new byte[sizeOfTokens(tokenList)];
-
-		int exportIndex = 0;
+		ByteBuffer exportBuffer = ByteBuffer.allocate(sizeOfTokens(tokenList));
 
 		for (Token t : tokenList) {
 			char type = t.type;
 			String fieldString = t.field;
 
 			Method getMethod = j.getClass().getMethod("get" + fieldString);
-			int increment = assembleToByte(export, exportIndex, type, getMethod, j);
-			exportIndex += increment;
+			assembleToByteBuffer(exportBuffer, type, getMethod, j);
 
 		}
 
-		return export;
+		return exportBuffer;
 	}
 
-	private int assembleToByte(byte[] des, int start, char type, Method getMethod, ToBytes j)
+	private int assembleToByteBuffer(ByteBuffer buffer, char type, Method getMethod, ToBytes j)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		switch (type) {
 		case 'i':
 			int iValue = ((Integer) getMethod.invoke(j)).intValue();
-			Assembler.putIntToBytes(des, start, iValue);
+			buffer.putInt(iValue);
 			return Integer.BYTES;
 		case 'j':
 			long lValue = ((Long) getMethod.invoke(j)).longValue();
-			Assembler.putLongToBytes(des, start, lValue);
+			buffer.putLong(lValue);
 			return Long.BYTES;
 		case 'z':
 			boolean zValue = ((Boolean) getMethod.invoke(j)).booleanValue();
-			Assembler.putBooleanToBytes(des, start, zValue);
+			buffer.put((byte) (zValue ? 1 : 0));
 			return 1;
 		case 'b':
 			byte bValue = ((Byte) getMethod.invoke(j)).byteValue();
-			des[start] = bValue;
+			buffer.put(bValue);
 			return Byte.BYTES;
 		case 'c':
 			char cValue = ((Character) getMethod.invoke(j)).charValue();
-			Assembler.putCharToBytes(des, start, cValue);
+			buffer.putChar(cValue);
 			return Character.BYTES;
 		case 's':
 			short sValue = ((Short) getMethod.invoke(j)).shortValue();
-			Assembler.putShortToBytes(des, start, sValue);
+			buffer.putShort(sValue);
 			return Short.BYTES;
 		case 'f':
 			float fValue = ((Float) getMethod.invoke(j)).floatValue();
-			Assembler.putFloatToBytes(des, start, fValue);
+			buffer.putFloat(fValue);
 			return Float.BYTES;
 		case 'd':
 			double dValue = ((Double) getMethod.invoke(j)).doubleValue();
-			Assembler.putDoubleToBytes(des, start, dValue);
+			buffer.putDouble(dValue);
 			return Double.BYTES;
 		default:
 			return 0;
@@ -203,6 +199,25 @@ public class ByteUtils {
 	}
 
 	/**
+	 * To convert object field to ByteBuffer where position is set to 0, and
+	 * limit is set to capacity.
+	 * 
+	 * @param object
+	 * @return
+	 * @throws ToByteComplieException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws InvocationTargetException
+	 */
+	public ByteBuffer toByteBuffer(ToBytes object) throws ToByteComplieException, IllegalArgumentException,
+			IllegalAccessException, NoSuchMethodException, SecurityException, InvocationTargetException {
+		List<Token> tokenList = complie(object);
+		return (ByteBuffer) export(object, tokenList).flip();
+	}
+
+	/**
 	 * To convert object to byte array.
 	 * 
 	 * @param object
@@ -220,22 +235,12 @@ public class ByteUtils {
 	 */
 	public byte[] toBytes(ToBytes object) throws ToByteComplieException, IllegalArgumentException,
 			IllegalAccessException, NoSuchMethodException, SecurityException, InvocationTargetException {
-		List<Token> tokenList = complie(object);
-		return export(object, tokenList);
+		return toByteBuffer(object).array();
 	}
 
-	public static class Token {
+	static class Token {
 		public char type;
 		public String field;
-	}
-
-	public static void main(String args[]) {
-		TestClass test = new TestClass();
-		try {
-			ByteUtils.getInstance().complie(test);
-		} catch (ToByteComplieException e) {
-			e.printStackTrace();
-		}
 	}
 
 }
