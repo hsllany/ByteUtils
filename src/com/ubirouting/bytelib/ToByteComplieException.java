@@ -1,6 +1,10 @@
-package java.com.ubirouting.bytelib;
+package com.ubirouting.bytelib;
 
 public class ToByteComplieException extends Exception {
+
+	public ToByteComplieException(String string) {
+		super(string);
+	}
 
 	/**
 	 * 
