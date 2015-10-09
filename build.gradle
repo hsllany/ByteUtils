@@ -9,7 +9,7 @@ System.out.println("version"+version);
 sourceSets {
     main {
         java {
-            srcDir 'src/com'
+            srcDir 'src'
         }
     }
 }
