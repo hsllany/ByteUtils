@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+version = '1.3'
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/com'
+        }
+    }
+}
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'ToByteUtils',
+                   'Implementation-Version': version
+    }
+}
