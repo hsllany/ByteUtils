@@ -1,6 +1,10 @@
 apply plugin: 'java'
 
-version = '1.3'
+version = '1.1';
+
+System.out.println("version"+version);
+
+
 
 sourceSets {
     main {
