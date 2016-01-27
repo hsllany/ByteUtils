@@ -18,7 +18,7 @@ import java.util.Map;
  * @author YangTao
  *
  */
-public class ByteUtils {
+public final class ByteUtils {
 
 	private static ByteUtils instance = null;
 
