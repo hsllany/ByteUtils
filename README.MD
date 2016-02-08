@@ -7,7 +7,7 @@ ByteUtils编写的目的，就是为了快捷方便的完成这种对象到byte�
 
 应用步骤：
 1. 对象implements ToByte接口
-2. 将需要编码的变量，实现public的访问接口(get*()方法)；
+2. 将需要编码的变量，实现访问接口(get*()方法)；
 3. 重写format()方法，来定义对象内变量的编码格式及其在byte数组中的顺序；
 4. 调用ByteUtils.toBytes()方法，ByteUtils将对format()方法进行解析，并根据其[编写规则](#format)，将对象转换成响应字节数组。
 
