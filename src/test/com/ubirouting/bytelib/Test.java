@@ -7,7 +7,6 @@ import com.ubirouting.bytelib.ToByteComplieException;
 import com.ubirouting.bytelib.ToBytes;
 
 public class Test implements ToBytes {
-	
 
 	private int aa;
 	private int mHaha;
@@ -15,8 +14,8 @@ public class Test implements ToBytes {
 	private double d = 34567;
 	private short s = 123;
 	private long l = 1234567890;
-	
-	public Test(){
+
+	public Test() {
 		aa = 1;
 		mHaha = 48;
 	}
@@ -25,36 +24,36 @@ public class Test implements ToBytes {
 	public String format() {
 		return "i[getAA]i[getHaha]z[getBoolean]f[getF]d[getD]s[getS]j[getL]";
 	}
-	
-	public int getAA(){
+
+	public int getAA() {
 		return aa;
 	}
-	
-	public int getHaha(){
+
+	private int getHaha() {
 		return mHaha;
 	}
-	
-	public boolean getBoolean(){
+
+	public boolean getBoolean() {
 		return true;
 	}
-	
-	public float getF(){
+
+	public float getF() {
 		return f;
 	}
-	
-	public double getD(){
+
+	public double getD() {
 		return d;
 	}
-	
-	public short getS(){
+
+	public short getS() {
 		return s;
 	}
-	
-	public long getL(){
+
+	public long getL() {
 		return l;
 	}
-	
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		Test t = new Test();
 		try {
 			byte[] b = ByteUtils.getInstance().toBytes(t);

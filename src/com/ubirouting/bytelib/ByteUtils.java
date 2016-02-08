@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Convert a object to bytes. Single Instance invoke by {@code getInstance()} <br/>
+ * Convert a object to bytes. Single Instance invoke by {@code getInstance()}
+ * <br/>
  * To use this class, Object should implements {@code toBytes} interface, and
  * override the {@code format()} function. Then you can invoke the
  * {@code toBytes()} to convert object to byte array in the order you set up.
@@ -37,8 +38,7 @@ public final class ByteUtils {
 	private Map<Class<?>, List<Token>> complieList;
 
 	private ByteUtils() {
-		complieList = Collections
-				.synchronizedMap(new HashMap<Class<?>, List<Token>>());
+		complieList = Collections.synchronizedMap(new HashMap<Class<?>, List<Token>>());
 	}
 
 	private List<Token> complie(ToBytes j) throws ToByteComplieException {
@@ -63,8 +63,7 @@ public final class ByteUtils {
 			switch (lookingFor) {
 			case 0:
 				t = new Token();
-				if (token == 'z' || token == 'b' || token == 'c'
-						|| token == 's' || token == 'i' || token == 'j'
+				if (token == 'z' || token == 'b' || token == 'c' || token == 's' || token == 'i' || token == 'j'
 						|| token == 'f' || token == 'd') {
 					t.type = token;
 					lookingFor = 1;
@@ -107,8 +106,7 @@ public final class ByteUtils {
 	 * @throws SecurityException
 	 * @throws ToByteComplieException
 	 */
-	private ByteBuffer export(ToBytes j, List<Token> tokenList)
-			throws SecurityException, ToByteComplieException {
+	private ByteBuffer export(ToBytes j, List<Token> tokenList) throws SecurityException, ToByteComplieException {
 		ByteBuffer exportBuffer = ByteBuffer.allocate(sizeOfTokens(tokenList));
 		try {
 			for (Token t : tokenList) {
@@ -117,12 +115,11 @@ public final class ByteUtils {
 
 				Method getMethod;
 
-				getMethod = j.getClass().getMethod(fieldString);
+				getMethod = getMethod(fieldString, j.getClass());
+				getMethod.setAccessible(true);
 
 				assembleToByteBuffer(exportBuffer, type, getMethod, j);
 			}
-		} catch (NoSuchMethodException e) {
-			throw new ToByteComplieException("Method not found.");
 		} catch (IllegalAccessException e) {
 			throw new ToByteComplieException("Method not accessable.");
 		} catch (IllegalArgumentException e) {
@@ -134,9 +131,8 @@ public final class ByteUtils {
 		return exportBuffer;
 	}
 
-	private int assembleToByteBuffer(ByteBuffer buffer, char type,
-			Method getMethod, ToBytes j) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
+	private int assembleToByteBuffer(ByteBuffer buffer, char type, Method getMethod, ToBytes j)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		switch (type) {
 		case 'i':
 			int iValue = ((Integer) getMethod.invoke(j)).intValue();
@@ -221,8 +217,7 @@ public final class ByteUtils {
 	 * @throws SecurityException
 	 * @throws InvocationTargetException
 	 */
-	public ByteBuffer toByteBuffer(ToBytes object)
-			throws ToByteComplieException {
+	public ByteBuffer toByteBuffer(ToBytes object) throws ToByteComplieException {
 		List<Token> tokenList = complie(object);
 		return (ByteBuffer) export(object, tokenList).flip();
 	}
@@ -250,6 +245,17 @@ public final class ByteUtils {
 	static class Token {
 		public char type;
 		public String field;
+	}
+
+	private static Method getMethod(String methodName, Class<?> clazz) {
+		try {
+			Method ms = clazz.getDeclaredMethod(methodName);
+			ms.setAccessible(true);
+			return ms;
+		} catch (NoSuchMethodException | SecurityException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }
