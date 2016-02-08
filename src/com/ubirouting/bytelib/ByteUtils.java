@@ -223,6 +223,18 @@ public final class ByteUtils {
 	}
 
 	/**
+	 * return the size of bytes
+	 * 
+	 * @param object
+	 * @return
+	 * @throws ToByteComplieException
+	 */
+	public int byteSize(ToBytes object) throws ToByteComplieException {
+		List<Token> tokenList = complie(object);
+		return sizeOfTokens(tokenList);
+	}
+
+	/**
 	 * To convert object to byte array.
 	 * 
 	 * @param object
