@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.ubirouting.bytelib.Token.TokenType;
+
 /**
  * Convert a object to bytes. Single Instance invoke by {@code getInstance()}
  * <br/>
@@ -41,60 +43,76 @@ public final class ByteUtils {
 		complieList = Collections.synchronizedMap(new HashMap<Class<?>, List<Token>>());
 	}
 
-	private List<Token> complie(ToBytes j) throws ToByteComplieException {
+	/**
+	 * make token list for object
+	 * 
+	 * @param j
+	 * @return
+	 * @throws ToByteComplieException
+	 */
+	List<Token> complieOrGet(Class<? extends ToBytes> c) throws ToByteComplieException {
 
 		/**
 		 * If j has been complied, than return the compile result immediately.
 		 */
-		if (complieList.containsKey(j.getClass()))
-			return complieList.get(j.getClass());
+		if (complieList.containsKey(c))
+			return complieList.get(c);
 
 		List<Token> tokenList = new LinkedList<>();
+		Method[] methods = c.getDeclaredMethods();
 
-		char[] formatChars = j.format().toCharArray();
-		// 0- stands token, 1-stands '[', 2-stands field;
-		int lookingFor = 0;
+		for (Method method : methods) {
+			ToByte toByte = method.getAnnotation(ToByte.class);
+			if (toByte != null) {
+				Token t = buildToken(c, method);
+				t.order = toByte.order();
+				tokenList.add(t);
+			}
+		}
 
+		Collections.sort(tokenList);
+		System.out.println(tokenList.toString());
+		complieList.put(c, tokenList);
+		return tokenList;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Token buildToken(Class<? extends ToBytes> c, Method m) throws ToByteComplieException {
+		Class<?> returnType = m.getReturnType();
 		Token t = null;
-		StringBuilder sb = new StringBuilder();
-
-		for (int i = 0; i < formatChars.length; i++) {
-			char token = formatChars[i];
-			switch (lookingFor) {
-			case 0:
-				t = new Token();
-				if (token == 'z' || token == 'b' || token == 'c' || token == 's' || token == 'i' || token == 'j'
-						|| token == 'f' || token == 'd') {
-					t.type = token;
-					lookingFor = 1;
-				} else {
-					throw new ToByteComplieException("format is wrong, unknowing indicator");
-				}
-				break;
-			case 1:
-				if (token == '[') {
-					lookingFor = 2;
-				} else {
-					throw new ToByteComplieException("format is wrong, indicator must be followed by '['");
-				}
-				break;
-			case 2:
-				if (token != ']') {
-					sb.append(token);
-				} else {
-					t.field = sb.toString();
-					sb.setLength(0);
-					tokenList.add(t);
-					lookingFor = 0;
-				}
-				break;
+		if (returnType == int.class) {
+			t = new Token(TokenType.Integer);
+		} else if (returnType == long.class) {
+			t = new Token(TokenType.Long);
+		} else if (returnType == boolean.class) {
+			t = new Token(TokenType.Boolean);
+		} else if (returnType == byte.class) {
+			t = new Token(TokenType.Byte);
+		} else if (returnType == short.class) {
+			t = new Token(TokenType.Short);
+		} else if (returnType == float.class) {
+			t = new Token(TokenType.Float);
+		} else if (returnType == double.class) {
+			t = new Token(TokenType.Double);
+		} else if (returnType == char.class) {
+			t = new Token(TokenType.Char);
+		} else if (returnType == void.class) {
+			// ignore
+			throw new ToByteComplieException(c.getName() + "." + m.getName() + "() must have a return value!");
+		} else {
+			t = new Token(TokenType.Object);
+			if (Utils.isToBytesClass(returnType)) {
+				t.setObjectClass((Class<? extends ToBytes>) returnType);
+				complieOrGet((Class<? extends ToBytes>) returnType);
+			} else {
+				throw new ToByteComplieException(m.getName() + "() return value is not a ToByte class!");
 			}
 
 		}
 
-		complieList.put(j.getClass(), tokenList);
+		t.methodName = m.getName();
 
-		return tokenList;
+		return t;
 	}
 
 	/**
@@ -106,99 +124,115 @@ public final class ByteUtils {
 	 * @throws SecurityException
 	 * @throws ToByteComplieException
 	 */
-	private ByteBuffer export(ToBytes j, List<Token> tokenList) throws SecurityException, ToByteComplieException {
-		ByteBuffer exportBuffer = ByteBuffer.allocate(sizeOfTokens(tokenList));
-		try {
-			for (Token t : tokenList) {
-				char type = t.type;
-				String fieldString = t.field;
+	private void export(ByteBuffer byteBuffer, ToBytes j) throws ToByteComplieException {
+		List<Token> tokenList = complieOrGet(j.getClass());
 
-				Method getMethod;
+		for (Token t : tokenList) {
+			// char type = t.type;
+			String fieldString = t.methodName;
 
-				getMethod = getMethod(fieldString, j.getClass());
-				getMethod.setAccessible(true);
+			Method getMethod;
 
-				assembleToByteBuffer(exportBuffer, type, getMethod, j);
+			getMethod = Utils.getMethod(fieldString, j.getClass());
+			getMethod.setAccessible(true);
+
+			try {
+				assembleToByteBuffer(byteBuffer, t.type, getMethod, j);
+			} catch (IllegalAccessException e) {
+				throw new ToByteComplieException(getMethod.getName() + " can't be accessible");
+			} catch (IllegalArgumentException e) {
+				throw new ToByteComplieException(getMethod.getName() + " argument is not void");
+			} catch (InvocationTargetException e) {
+				throw new ToByteComplieException(getMethod.getName() + " can't be accessible for this object");
+			} catch (SecurityException e) {
+				throw new ToByteComplieException(getMethod.getName() + " is not safe.");
 			}
-		} catch (IllegalAccessException e) {
-			throw new ToByteComplieException("Method not accessable.");
-		} catch (IllegalArgumentException e) {
-			throw new ToByteComplieException("Method argument exception.");
-		} catch (InvocationTargetException e) {
-			throw new ToByteComplieException("InvocationTargetException.");
 		}
 
-		return exportBuffer;
 	}
 
-	private int assembleToByteBuffer(ByteBuffer buffer, char type, Method getMethod, ToBytes j)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	private int assembleToByteBuffer(ByteBuffer buffer, TokenType type, Method getMethod, ToBytes j)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SecurityException,
+			ToByteComplieException {
 		switch (type) {
-		case 'i':
+		case Integer:
 			int iValue = ((Integer) getMethod.invoke(j)).intValue();
 			buffer.putInt(iValue);
 			return Integer.BYTES;
-		case 'j':
+		case Long:
 			long lValue = ((Long) getMethod.invoke(j)).longValue();
 			buffer.putLong(lValue);
 			return Long.BYTES;
-		case 'z':
+		case Boolean:
 			boolean zValue = ((Boolean) getMethod.invoke(j)).booleanValue();
 			buffer.put((byte) (zValue ? 1 : 0));
 			return 1;
-		case 'b':
+		case Byte:
 			byte bValue = ((Byte) getMethod.invoke(j)).byteValue();
 			buffer.put(bValue);
 			return Byte.BYTES;
-		case 'c':
+		case Char:
 			char cValue = ((Character) getMethod.invoke(j)).charValue();
 			buffer.putChar(cValue);
 			return Character.BYTES;
-		case 's':
+		case Short:
 			short sValue = ((Short) getMethod.invoke(j)).shortValue();
 			buffer.putShort(sValue);
 			return Short.BYTES;
-		case 'f':
+		case Float:
 			float fValue = ((Float) getMethod.invoke(j)).floatValue();
 			buffer.putFloat(fValue);
 			return Float.BYTES;
-		case 'd':
+		case Double:
 			double dValue = ((Double) getMethod.invoke(j)).doubleValue();
 			buffer.putDouble(dValue);
 			return Double.BYTES;
+		case Object:
+			ToBytes obj = (ToBytes) getMethod.invoke(j);
+			if (obj == null) {
+				int size = byteSizeOfToBytes(obj.getClass());
+				byte[] b = new byte[size];
+				buffer.put(b);
+			} else {
+				export(buffer, obj);
+			}
 		default:
 			return 0;
 		}
 	}
 
-	private int sizeOfTokens(List<Token> tokenList) {
+	int byteSizeOfToBytes(Class<? extends ToBytes> c) throws ToByteComplieException {
+		List<Token> listToken = complieOrGet(c);
 		int size = 0;
 
-		for (Token t : tokenList) {
-			size += sizeOfType(t.type);
+		for (Token t : listToken) {
+			size += sizeOfType(t);
 		}
 
 		return size;
 	}
 
-	private static int sizeOfType(char type) {
-		switch (type) {
-		case 'i':
+	private int sizeOfType(Token tk) throws ToByteComplieException {
+		switch (tk.type) {
+		case Integer:
 			return Integer.BYTES;
-		case 'f':
+		case Float:
 			return Float.BYTES;
-		case 'b':
+		case Byte:
 			return Byte.BYTES;
-		case 'c':
+		case Char:
 			return Character.BYTES;
-		case 'z':
+		case Boolean:
 			return 1;
-		case 's':
+		case Short:
 			return Short.BYTES;
-		case 'j':
+		case Long:
 			return Long.BYTES;
-		case 'd':
+		case Double:
 			return Double.BYTES;
+		case Object:
+			Class<? extends ToBytes> c = tk.getObjectClass();
+			return byteSizeOfToBytes(c);
 		default:
 			return 0;
 		}
@@ -218,8 +252,11 @@ public final class ByteUtils {
 	 * @throws InvocationTargetException
 	 */
 	public ByteBuffer toByteBuffer(ToBytes object) throws ToByteComplieException {
-		List<Token> tokenList = complie(object);
-		return (ByteBuffer) export(object, tokenList).flip();
+		ByteBuffer exportBuffer = ByteBuffer.allocate(byteSizeOfToBytes(object.getClass()));
+
+		export(exportBuffer, object);
+
+		return (ByteBuffer) exportBuffer.flip();
 	}
 
 	/**
@@ -230,8 +267,7 @@ public final class ByteUtils {
 	 * @throws ToByteComplieException
 	 */
 	public int byteSize(ToBytes object) throws ToByteComplieException {
-		List<Token> tokenList = complie(object);
-		return sizeOfTokens(tokenList);
+		return byteSizeOfToBytes(object.getClass());
 	}
 
 	/**
@@ -252,22 +288,6 @@ public final class ByteUtils {
 	 */
 	public byte[] toBytes(ToBytes object) throws ToByteComplieException {
 		return toByteBuffer(object).array();
-	}
-
-	static class Token {
-		public char type;
-		public String field;
-	}
-
-	private static Method getMethod(String methodName, Class<?> clazz) {
-		try {
-			Method ms = clazz.getDeclaredMethod(methodName);
-			ms.setAccessible(true);
-			return ms;
-		} catch (NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 }

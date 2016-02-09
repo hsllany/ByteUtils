@@ -2,6 +2,7 @@ package test.com.ubirouting.bytelib;
 
 import java.util.Arrays;
 
+import com.ubirouting.bytelib.ToByte;
 import com.ubirouting.bytelib.ByteUtils;
 import com.ubirouting.bytelib.ToByteComplieException;
 import com.ubirouting.bytelib.ToBytes;
@@ -20,37 +21,48 @@ public class Test implements ToBytes {
 		mHaha = 48;
 	}
 
-	@Override
 	public String format() {
 		return "i[getAA]i[getHaha]z[getBoolean]f[getF]d[getD]s[getS]j[getL]";
 	}
 
+	@ToByte(order = 1)
 	public int getAA() {
-		return aa;
+		return 3;
 	}
 
+	@ToByte(order = 2)
 	private int getHaha() {
 		return mHaha;
 	}
 
+	@ToByte(order = 4)
 	public boolean getBoolean() {
 		return true;
 	}
 
+	@ToByte(order = 4)
 	public float getF() {
 		return f;
 	}
 
+	@ToByte(order = 4)
 	public double getD() {
 		return d;
 	}
 
+	@ToByte(order = 4)
 	public short getS() {
 		return s;
 	}
 
+	@ToByte(order = 4)
 	public long getL() {
 		return l;
+	}
+
+	@ToByte(order = 0)
+	public TestClass2 haha() {
+		return new TestClass2();
 	}
 
 	public static void main(String[] args) {
