@@ -6,6 +6,7 @@ ByteUtils Simple Library
 ByteUtils编写的目的，就是为了快捷方便的完成这种对象到byte数组的过程。
 
 应用步骤：
+
 1. 对象implements ToBytes接口
 2. 将需要编码的变量，实现访问接口(get*()方法)；
 3. 对于该方法，添加ToByte注解，若需制定该方法转换为Byte后的顺序，还需赋予order属性
