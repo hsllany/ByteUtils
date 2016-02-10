@@ -41,10 +41,10 @@ public final class ByteUtils {
 	/**
 	 * Map which stores the complies result.
 	 */
-	private Map<Class<?>, List<Token>> complieList;
+	private Map<Class<? extends Bytable>, List<Token>> complieList;
 
 	private ByteUtils() {
-		complieList = Collections.synchronizedMap(new HashMap<Class<?>, List<Token>>());
+		complieList = Collections.synchronizedMap(new HashMap<Class<? extends Bytable>, List<Token>>());
 	}
 
 	/**
@@ -403,7 +403,7 @@ public final class ByteUtils {
 		ByteBuffer exportBuffer = ByteBuffer.allocate(byteSizeOfToBytes(object));
 
 		export(exportBuffer, object);
-
+		complieList.remove(object.getClass());
 		return (ByteBuffer) exportBuffer.flip();
 	}
 
