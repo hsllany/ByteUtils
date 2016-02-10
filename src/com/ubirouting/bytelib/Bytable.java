@@ -1,5 +1,5 @@
 package com.ubirouting.bytelib;
 
-public interface ToBytes {
+public interface Bytable {
 
 }

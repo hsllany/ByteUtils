@@ -6,7 +6,7 @@ class Utils {
 	private Utils() {
 	};
 
-	static Method getMethod(String methodName, Class<?> clazz) {
+	static Method getAccessibleMethod(String methodName, Class<?> clazz) {
 		try {
 			Method ms = clazz.getDeclaredMethod(methodName);
 			ms.setAccessible(true);
@@ -20,7 +20,7 @@ class Utils {
 	static boolean isToBytesClass(Class<?> c) {
 		Class<?>[] interfaces = c.getInterfaces();
 		for (Class<?> interfaceItem : interfaces) {
-			if (interfaceItem == ToBytes.class)
+			if (interfaceItem == Bytable.class)
 				return true;
 		}
 

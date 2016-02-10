@@ -1,18 +1,12 @@
 package test.com.ubirouting.bytelib;
 
 import com.ubirouting.bytelib.ToByte;
-import com.ubirouting.bytelib.ToBytes;
+import com.ubirouting.bytelib.Bytable;
 
-public class TestClass2 implements ToBytes {
+public class TestClass2 implements Bytable {
 
 	@ToByte
 	public int low() {
 		return 123;
 	}
-
-	public String format() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

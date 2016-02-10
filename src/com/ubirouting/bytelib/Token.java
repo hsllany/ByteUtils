@@ -1,11 +1,14 @@
 package com.ubirouting.bytelib;
 
+import java.lang.ref.WeakReference;
+
 class Token implements Comparable<Token> {
 	public TokenType type;
 	public String methodName;
 	public int order;
+	private WeakReference<Object> objectRef;
 
-	private Class<? extends ToBytes> objectClass;
+	private Class<? extends Bytable> objectClass;
 
 	public Token(TokenType type) {
 		this.type = type;
@@ -17,25 +20,29 @@ class Token implements Comparable<Token> {
 
 	}
 
-	Class<? extends ToBytes> getObjectClass() {
+	Class<? extends Bytable> getObjectClass() {
 		return objectClass;
 	}
 
-	void setObjectClass(Class<? extends ToBytes> objectClass) {
+	void setObjectClass(Class<? extends Bytable> objectClass) {
 		this.objectClass = objectClass;
 	}
 
-	public static enum TokenType {
-		Boolean, Byte, Char, Short, Integer, Long, Float, Double, Object;
+	Object getObject() {
+		if (objectRef != null)
+			return objectRef.get();
+		return null;
+	}
 
-		private String tokenContent;
+	void setObject(Object j) {
+		if (type == TokenType.BooleanArray || type == TokenType.ByteArray || type == TokenType.CharArray
+				|| type == TokenType.ShortArray || type == TokenType.IntegerArray || type == TokenType.LongArray
+				|| type == TokenType.DoubleArray || type == TokenType.FloatArray || type == TokenType.Object)
+			objectRef = new WeakReference<Object>(j);
+	}
 
-		public void setTokenContent(String tokenContent) {
-			if (this == TokenType.Object)
-				this.tokenContent = tokenContent;
-			else
-				throw new UnsupportedOperationException();
-		}
+	static enum TokenType {
+		Boolean, Byte, Char, Short, Integer, Long, Float, Double, Object, BooleanArray, ByteArray, CharArray, ShortArray, IntegerArray, LongArray, FloatArray, DoubleArray;
 	}
 
 	@Override
