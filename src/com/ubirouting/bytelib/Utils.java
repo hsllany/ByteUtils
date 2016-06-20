@@ -16,15 +16,4 @@ class Utils {
 		}
 		return null;
 	}
-
-	static boolean isToBytesClass(Class<?> c) {
-		Class<?>[] interfaces = c.getInterfaces();
-		for (Class<?> interfaceItem : interfaces) {
-			if (interfaceItem == Bytable.class)
-				return true;
-		}
-
-		return false;
-
-	}
 }

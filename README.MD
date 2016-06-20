@@ -1,60 +1,53 @@
 ByteUtils Simple Library
 =======
 
-当处理Socket，或二进制文件时，常常需要把Object转换成byte[]或ByteBuffer。当然，除了调用ObjectOutStream外，有时我们也会需要独特的编码格式来保护数据。
+When transfer object through stream, object should be transform
+into byte array. Besides OjbectOutStream, we may have other
+option.
 
-ByteUtils编写的目的，就是为了快捷方便的完成这种对象到byte数组的过程。
+ByteUtils is to convert an object to byte[], or from byte[] to object。
 
-应用步骤：
+Steps：
 
-##1. 对象implements Bytable接口。对相应的```get*()```方法赋予```@ToByte```注解
+##1. implements Bytable interface, and add annotation @ToByte to the field you want to convert.
 
 
 ```java
 //TestClass.java
-public TestClass implements Bytable{
+public TestClass{
     @ToByte(order = 1)
-	public int getInt() {
-		return 3;
-	}
+	private int a = 3;
 	
 	@ToByte(order = 0)
-	public int[] getIntArray(){
-		return new int[]{1, 2, 3};
-	}
+	protected int[] b = new int[]{1,3,4};
 	
 	@ToByte(order = 0)
-	public TestClass2 getTestClass2(){	//TestClass2 is also a Bytable
-		return new TestClass2();
-	}
+	public TestClass2 testObj = new TestClass2();
 }
 
 //TestClass.java
-public class TestClass2 implements Bytable {
+public class TestClass2{
 
-	@ToByte
-	public int getInt2() {
-		return 123;
-	}
+	@ToByte(order = 1)
+	private int c = 3;
 }
 ```
 
-##2. 调用ByteUtils.toBytes()方法，ByteUtils将对该对象进行解析，并将对象转换成响应字节数组。
+##2. Invoke toBytes function.
 
 ```java
 TestClass t = new TestClass();
 try {
-	byte[] output = ByteUtils.getInstance().toBytes(t);
+	byte[] output = ByteUtils.toBytes(t);
 	System.out.println(Arrays.toString(output));
 } catch (ToByteComplieException e) {
 	e.printStackTrace();
 }
 ```
 
-Output:
+##3. From byte array into object:
+```java
+	byte[] output = ...;
 
-```shell
-[0, 0, 0, 123, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 3]
+	TestClass test = ByteUtils.toObject(output, TestClass.class);
 ```
-
-##3. 目前支持所有基本类型，以及其构成数组，以及Bytable的对象。暂不支持Bytable数组。
