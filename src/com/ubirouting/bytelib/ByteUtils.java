@@ -1,5 +1,6 @@
 package com.ubirouting.bytelib;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -189,38 +190,43 @@ public final class ByteUtils {
 
     private static void encodeArray(String typeStr, Field field, Object comm, List<byte[]> listBytes) {
         try {
-            Object[] objs = (Object[]) field.get(comm);
-            int length = objs.length;
+
+            Object objArrays = field.get(comm);
+            int length = Array.getLength(objArrays);
             listBytes.add(PrimaryDatas.i2b(length));
 
             if (field.getType().equals(String[].class)) {
-                for (String string : (String[]) objs) {
+                for (String string : (String[]) objArrays) {
                     listBytes.add(encodeString(string));
                 }
-            } else if (field.getType().equals(byte[].class) || field.getType().equals(Byte[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(objs.length);
-                for (Byte b : (Byte[]) objs) {
-                    bf.put(b);
+            } else if (field.getType().equals(Byte[].class) || field.getType().equals(byte[].class)) {
+                ByteBuffer bf = ByteBuffer.allocate(length);
+                for (int i = 0; i < length; i++) {
+                    bf.put((byte) Array.get(objArrays, i));
                 }
                 listBytes.add(bf.array());
             } else if (field.getType().equals(int[].class) || field.getType().equals(Integer[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(objs.length * 4);
-                for (Integer inte : (Integer[]) objs) {
-                    bf.put(PrimaryDatas.i2b(inte));
+                ByteBuffer bf = ByteBuffer.allocate(length * 4);
+                for (int i = 0; i < length; i++) {
+                    bf.put(PrimaryDatas.i2b((int) Array.get(objArrays, i)));
                 }
                 listBytes.add(bf.array());
             } else if (field.getType().equals(float[].class) || field.getType().equals(Float[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(objs.length * 4);
-                for (Float flo : (Float[]) objs) {
-                    bf.put(PrimaryDatas.f2b(flo));
+                ByteBuffer bf = ByteBuffer.allocate(length * 4);
+                for (int i = 0; i < length; i++) {
+                    bf.put(PrimaryDatas.f2b((float) Array.get(objArrays, i)));
                 }
                 listBytes.add(bf.array());
             } else if (field.getType().equals(double[].class) || field.getType().equals(Double[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(objs.length * 8);
-                for (Double dbl : (Double[]) objs) {
-                    bf.put(PrimaryDatas.d2b(dbl));
+                ByteBuffer bf = ByteBuffer.allocate(length * 8);
+                for (int i = 0; i < length; i++) {
+                    bf.put(PrimaryDatas.d2b((double) Array.get(objArrays, i)));
                 }
                 listBytes.add(bf.array());
+            } else {
+                for (int i = 0; i < length; i++) {
+                    encodeObj(Array.get(objArrays, i), listBytes);
+                }
             }
         } catch (IllegalArgumentException | IllegalAccessException e) {
             e.printStackTrace();
@@ -529,10 +535,6 @@ public final class ByteUtils {
         field.set(comm, objs);
     }
 
-    private static class ParseInteger {
-        int index;
-    }
-
     public static List<Field> allFields(Class<?> clazz) {
         List<Field> fieldList = new ArrayList<Field>();
 
@@ -542,6 +544,10 @@ public final class ByteUtils {
         } while ((nowClass = nowClass.getSuperclass()) != null);
 
         return fieldList;
+    }
+
+    private static class ParseInteger {
+        int index;
     }
 
     private static class ByteLinkedList extends LinkedList<byte[]> {
