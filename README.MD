@@ -105,16 +105,16 @@ And this will print something like this, all its fields, which has ToByte annota
 ```
 Protocol of test.com.ubirouting.bytelib.TestClass1
 ===============
-a -- [int]a
-b -- [short]b
-c -- [byte]c
-d -- [long]d
-e -- [float]e
-f -- [double]f
-as -- [class [Ljava.lang.String;]
-fs -- [class [D]
-hs -- [class [Ltest.com.ubirouting.bytelib.TestClass0;]
-is -- [Array of test.com.ubirouting.bytelib.TestClass0]
+a -- [int] a
+b -- [short] b
+c -- [byte] c
+d -- [long] d
+e -- [float] e
+f -- [double] f
+as -- [Array of java.lang.String]
+fs -- [Array of double]
+hs -- [Array of test.com.ubirouting.bytelib.TestClass0]
+is -- [List of test.com.ubirouting.bytelib.TestClass0]
 
 Protocol of test.com.ubirouting.bytelib.TestClass0
 ===============

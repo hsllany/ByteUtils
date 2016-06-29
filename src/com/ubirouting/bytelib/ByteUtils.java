@@ -582,7 +582,7 @@ public final class ByteUtils {
             if (description.equals(UNKNOW))
                 description = "";
 
-            sb.append(field.getName()).append(" -- [").append(processGenericString(field.getGenericType().toString(), furtherDecoder)).append("]")
+            sb.append(field.getName()).append(" -- [").append(processGenericString(field.getGenericType().toString(), furtherDecoder)).append("] ")
                     .append
                             (description).append
                     ("\n");
@@ -610,11 +610,12 @@ public final class ByteUtils {
         if (genericTypeString.startsWith("java.util.List")) {
             String generic = getGenericTypeStringFromGeneric(genericTypeString);
             furtherDecodeList.add(generic);
-            return "Array of " + generic;
-        } else if (genericTypeString.startsWith("java.util.Map")) {
-            String generic = getGenericTypeStringFromGeneric(genericTypeString);
-            furtherDecodeList.add(generic);
-            return "Map of " + generic;
+            return "List of " + generic;
+        } else if (genericTypeString.startsWith("class [L")) {
+            String arrayElementType = genericTypeString.substring(8, genericTypeString.length() - 1);
+            return "Array of " + arrayElementType;
+        } else if (genericTypeString.startsWith("class [")) {
+            return "Array of " + baseTypeString(genericTypeString.substring(7));
         } else
             return genericTypeString;
     }
@@ -628,6 +629,23 @@ public final class ByteUtils {
         } else
             return genericTypeString;
 
+    }
+
+    private static String baseTypeString(String typeCode) {
+        if (typeCode.equals("D")) {
+            return "double";
+        } else if (typeCode.equals("B")) {
+            return "byte";
+        } else if (typeCode.equals("S")) {
+            return "short";
+        } else if (typeCode.equals("I")) {
+            return "int";
+        } else if (typeCode.equals("J")) {
+            return "long";
+        } else if (typeCode.equals("F")) {
+            return "float";
+        }
+        return "unknown";
     }
 
     public static List<Field> allFields(Class<?> clazz) {
