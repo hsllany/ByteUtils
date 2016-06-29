@@ -9,13 +9,13 @@ ByteUtils is to convert an object to byte[], or from byte[] to object。
 
 Steps：
 
-##1. implements Bytable interface, and add annotation @ToByte to the field you want to convert.
+##1. Add annotation @ToByte to the field you want to convert.
 
 
 ```java
 //TestClass.java
 public TestClass{
-    @ToByte(order = 1)
+    @ToByte(order = 1, description="a is stands for blablabla")
 	private int a = 3;
 	
 	@ToByte(order = 0)
@@ -50,4 +50,30 @@ try {
 	byte[] output = ...;
 
 	TestClass test = ByteUtils.toObject(output, TestClass.class);
+```
+
+##4. Print protocol
+
+See what is the protocol behind the object, just run:
+```java
+	ByteUtils.printProtocol(DoLocateMessage.class);
+```
+
+And this will print something like this:
+```
+Protocol of com.ubirouting.imhereserver.message.DoLocateMessage
+===============
+_id -- [class java.lang.String]
+mBeaconList -- [Array of com.ubirouting.imhereserver.model.Beacon]
+mReceiveClientTime -- [long]
+mLat -- [float]
+mLng -- [float]
+mAddress -- [class java.lang.String]
+
+Protocol of com.ubirouting.imhereserver.model.Beacon
+===============
+minor -- [int]
+major -- [int]
+level -- [byte]
+battery -- [byte]
 ```

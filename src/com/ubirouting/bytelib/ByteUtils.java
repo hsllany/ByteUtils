@@ -13,7 +13,9 @@ import java.util.*;
  */
 public final class ByteUtils {
 
-    private ByteUtils(){
+    static String UNKNOW = "null";
+
+    private ByteUtils() {
         throw new UnsupportedOperationException("can't create this object");
     }
 
@@ -533,6 +535,82 @@ public final class ByteUtils {
         }
 
         field.set(comm, objs);
+    }
+
+    public static void printProtocol(Class<?> clazz) {
+        StringBuilder sb = new StringBuilder("Protocol of " + clazz.getName() + "\n===============\n");
+
+        List<Field> fieldsArray = allFields(clazz);
+
+        List<Field> fieldList = new ArrayList<>();
+        for (Field field : fieldsArray) {
+            ToByte annotation = field.getAnnotation(ToByte.class);
+            if (annotation != null && annotation.order() != -1) {
+                fieldList.add(field);
+            }
+        }
+
+        Collections.sort(fieldList, (o1, o2) -> {
+            ToByte annotation = o1.getAnnotation(ToByte.class);
+            ToByte annotation2 = o2.getAnnotation(ToByte.class);
+
+            return annotation.order() - annotation2.order();
+        });
+
+        List<String> furtherDecoder = new ArrayList<>();
+
+        for (Field field : fieldList) {
+            ToByte bytable = field.getAnnotation(ToByte.class);
+            String description = bytable.description();
+            if (description.equals(UNKNOW))
+                description = "";
+
+            sb.append(field.getName()).append(" -- [").append(processGenericString(field.getGenericType().toString(), furtherDecoder)).append("]")
+                    .append
+                            (description).append
+                    ("\n");
+        }
+
+        System.out.println(sb.toString());
+
+        if (furtherDecoder.size() > 0) {
+            for (String s : furtherDecoder) {
+                if (!s.startsWith("java.")) {
+                    try {
+                        Class<?> furtherS = Class.forName(s);
+                        printProtocol(furtherS);
+                    } catch (ClassNotFoundException e) {
+                        System.out.println("can't find " + s);
+                    }
+
+
+                }
+            }
+        }
+    }
+
+    private static String processGenericString(String genericTypeString, List<String> furtherDecodeList) {
+        if (genericTypeString.startsWith("java.util.List")) {
+            String generic = getGenericTypeStringFromGeneric(genericTypeString);
+            furtherDecodeList.add(generic);
+            return "Array of " + generic;
+        } else if (genericTypeString.startsWith("java.util.Map")) {
+            String generic = getGenericTypeStringFromGeneric(genericTypeString);
+            furtherDecodeList.add(generic);
+            return "Map of " + generic;
+        } else
+            return genericTypeString;
+    }
+
+    private static String getGenericTypeStringFromGeneric(String genericTypeString) {
+        int left = genericTypeString.indexOf('<');
+        int right = genericTypeString.indexOf('>');
+
+        if (left > 0 && right > 0 && (right > left)) {
+            return genericTypeString.substring(left + 1, right);
+        } else
+            return genericTypeString;
+
     }
 
     public static List<Field> allFields(Class<?> clazz) {
