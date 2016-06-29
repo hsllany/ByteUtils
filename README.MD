@@ -15,7 +15,7 @@ Steps：
 ```java
 //TestClass.java
 public TestClass{
-    @ToByte(order = 1, description="a is stands for blablabla")
+    @ToByte(order = 1, description="a stands for blablabla")
 	private int a = 3;
 	
 	@ToByte(order = 0)
@@ -59,7 +59,8 @@ See what is the protocol behind the object, just run:
 	ByteUtils.printProtocol(DoLocateMessage.class);
 ```
 
-And this will print something like this:
+And this will print something like this, all its fields, which has ToByte annotation, will be printed. Also if field
+ is also some object that has ToByte fields, it will also be printed after:
 ```
 Protocol of com.ubirouting.imhereserver.message.DoLocateMessage
 ===============
