@@ -14,29 +14,70 @@ Steps：
 
 ```java
 //TestClass.java
-public TestClass{
-    @ToByte(order = 1, description="a stands for blablabla")
-	private int a = 3;
-	
-	@ToByte(order = 0)
-	protected int[] b = new int[]{1,3,4};
-	
-	@ToByte(order = 0)
-	public TestClass2 testObj = new TestClass2();
-}
+public class TestClass1 {
+
+    @ToByte (order = 0, description = "a")
+    public int a = 1;
+
+    @ToByte (order = 2, description = "c")
+    protected byte c = 3;
+
+    @ToByte (order = 1, description = "b")
+    private short b = 2;
+
+    @ToByte (order = 3, description = "d")
+    private long d = 123l;
+
+    @ToByte (order = 4, description = "e")
+    private float e = 345.f;
+
+    @ToByte (order = 5, description = "f")
+    private double f = 3e10;
+
+    @ToByte (order = 6)
+    private String[] as = new String[3];
+
+    @ToByte (order = 7)
+    private double[] fs = new double[3];
+
+    @ToByte (order = 8)
+    private TestClass0[] hs = new TestClass0[3];
+
+    @ToByte (order = 9)
+    private List<TestClass0> is = new ArrayList<>();
+
+    public TestClass1() {
+        for (int i = 0; i < as.length; i++) {
+            as[i] = "hello world";
+            fs[i] = System.nanoTime();
+            hs[i] = new TestClass0();
+            is.add(new TestClass0());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return a + "," + b + "," + c + "," + d + "," + e + "," + f + "," + Arrays.toString(as) + "," + Arrays.toString(fs) + "," + Arrays.toString
+                (hs) + "," + is.toString();
+    }
 
 //TestClass.java
-public class TestClass2{
+public class TestClass0 {
 
-	@ToByte(order = 1)
-	private int c = 3;
+    @ToByte (order = 1)
+    private long a = System.nanoTime();
+
+    @Override
+    public String toString() {
+        return "testClass@a = " + a;
+    }
 }
 ```
 
 ##2. Invoke toBytes function.
 
 ```java
-TestClass t = new TestClass();
+TestClass1 t = new TestClass1();
 try {
 	byte[] output = ByteUtils.toBytes(t);
 	System.out.println(Arrays.toString(output));
@@ -49,32 +90,33 @@ try {
 ```java
 	byte[] output = ...;
 
-	TestClass test = ByteUtils.toObject(output, TestClass.class);
+	TestClass1 test = ByteUtils.toObject(output, TestClass1.class);
 ```
 
 ##4. Print protocol
 
 See what is the protocol behind the object, just run:
 ```java
-	ByteUtils.printProtocol(DoLocateMessage.class);
+	ByteUtils.printProtocol(TestClass1ixing.class);
 ```
 
 And this will print something like this, all its fields, which has ToByte annotation, will be printed. Also if field
  is also some object that has ToByte fields, it will also be printed after:
 ```
-Protocol of com.ubirouting.imhereserver.message.DoLocateMessage
+Protocol of test.com.ubirouting.bytelib.TestClass1
 ===============
-_id -- [class java.lang.String]
-mBeaconList -- [Array of com.ubirouting.imhereserver.model.Beacon]
-mReceiveClientTime -- [long]
-mLat -- [float]
-mLng -- [float]
-mAddress -- [class java.lang.String]
+a -- [int]a
+b -- [short]b
+c -- [byte]c
+d -- [long]d
+e -- [float]e
+f -- [double]f
+as -- [class [Ljava.lang.String;]
+fs -- [class [D]
+hs -- [class [Ltest.com.ubirouting.bytelib.TestClass0;]
+is -- [Array of test.com.ubirouting.bytelib.TestClass0]
 
-Protocol of com.ubirouting.imhereserver.model.Beacon
+Protocol of test.com.ubirouting.bytelib.TestClass0
 ===============
-minor -- [int]
-major -- [int]
-level -- [byte]
-battery -- [byte]
+a -- [long]
 ```

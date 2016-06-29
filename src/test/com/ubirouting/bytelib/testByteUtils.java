@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class testByteUtils extends TestCase {
 
     public void testClass1() {
-        
+
         TestClass1 obj = new TestClass1();
 
         System.out.println(obj.toString());
@@ -23,5 +23,9 @@ public class testByteUtils extends TestCase {
         System.out.println(obj2.toString());
 
 
+    }
+
+    public void testPrintProtocol() {
+        ByteUtils.printProtocol(TestClass1.class);
     }
 }
