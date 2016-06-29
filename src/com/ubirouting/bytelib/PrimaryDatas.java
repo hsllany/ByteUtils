@@ -8,6 +8,10 @@ package com.ubirouting.bytelib;
  */
 public class PrimaryDatas {
 
+    private PrimaryDatas() {
+        throw new UnsupportedOperationException("can't create this object");
+    }
+
     public static byte[] s2b(short x) {
         byte[] bytes = new byte[2];
         s2b(x, bytes, 0);

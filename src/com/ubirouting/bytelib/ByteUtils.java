@@ -267,8 +267,8 @@ public final class ByteUtils {
 
             } else if (fieldType.equals(short.class) || fieldType.equals(Short.class)) {
                 listBytes.add(PrimaryDatas.s2b((Short) field.get(comm)));
-
-
+            } else if (fieldType.equals(double.class) || fieldType.equals(Double.class)) {
+                listBytes.add(PrimaryDatas.d2b((Double) field.get(comm)));
             } else {
                 Object obj = field.get(comm);
                 encodeObj(obj, listBytes);
@@ -416,6 +416,12 @@ public final class ByteUtils {
                     pInt.index += 4;
                 }
                 field.set(comm, collection);
+            } else if (typeStr.contains("<java.lang.Double>")) {
+                for (int i = 0; i < forLength; i++) {
+                    collection.add(PrimaryDatas.b2d(bs, pInt.index));
+                    pInt.index += 8;
+                }
+                field.set(comm, collection);
 
             } else {
 
@@ -468,6 +474,9 @@ public final class ByteUtils {
         } else if (typeField.equals(Short.class) || typeField.equals(short.class)) {
             obj = PrimaryDatas.b2s(bs, pInt.index);
             pInt.index += 2;
+        } else if (typeField.equals(Double.class) || typeField.equals(double.class)) {
+            obj = PrimaryDatas.b2d(bs, pInt.index);
+            pInt.index += 8;
         } else {
 //            System.out.println("encodeField: " + typeStr);
             try {
@@ -487,50 +496,58 @@ public final class ByteUtils {
 
         int forLength = PrimaryDatas.b2i(bs, pInt.index);
         pInt.index += 4;
-        Object[] objs = null;
+        Object objs = null;
 
         Class<?> fieldType = field.getType();
 
-        if (fieldType.equals(String.class)) {
+        if (fieldType.equals(String[].class)) {
             objs = new String[forLength];
             for (int i = 0; i < forLength; i++) {
                 int length = PrimaryDatas.b2i(bs, pInt.index);
                 pInt.index += 4;
                 String str = PrimaryDatas.b2String(bs, pInt.index, pInt.index + length);
                 pInt.index += length;
-                objs[i] = str;
+                ((String[]) objs)[i] = str;
             }
-        } else if (fieldType.equals(Byte.class) || fieldType.equals(byte.class)) {
-            objs = new Byte[forLength];
+        } else if (fieldType.equals(Byte[].class) || fieldType.equals(byte[].class)) {
+            objs = new byte[forLength];
             for (int i = 0; i < forLength; i++) {
-                objs[i] = bs[pInt.index + i];
+                ((byte[]) objs)[i] = bs[pInt.index + i];
             }
             pInt.index += forLength;
-        } else if (fieldType.equals(Integer.class) || fieldType.equals(int.class)) {
-            objs = new Integer[forLength];
+        } else if (fieldType.equals(Integer[].class) || fieldType.equals(int[].class)) {
+            objs = new int[forLength];
             for (int i = 0; i < forLength; i++) {
-                objs[i] = PrimaryDatas.b2i(bs, pInt.index);
+                ((int[]) objs)[i] = PrimaryDatas.b2i(bs, pInt.index);
                 pInt.index += 4;
             }
-        } else if (fieldType.equals(Float.class) || fieldType.equals(float.class)) {
-            objs = new Float[forLength];
+        } else if (fieldType.equals(Float[].class) || fieldType.equals(float[].class)) {
+            objs = new float[forLength];
             for (int i = 0; i < forLength; i++) {
-                objs[i] = PrimaryDatas.b2f(bs, pInt.index);
+                ((float[]) objs)[i] = PrimaryDatas.b2f(bs, pInt.index);
                 pInt.index += 4;
             }
-        } else if (fieldType.equals(Short.class) || fieldType.equals(short.class)) {
-            objs = new Short[forLength];
+        } else if (fieldType.equals(Short[].class) || fieldType.equals(short[].class)) {
+            objs = new short[forLength];
             for (int i = 0; i < forLength; i++) {
-                objs[i] = PrimaryDatas.b2s(bs, pInt.index);
+                ((short[]) objs)[i] = PrimaryDatas.b2s(bs, pInt.index);
                 pInt.index += 2;
+            }
+        } else if (fieldType.equals(Double[].class) || fieldType.equals(double[].class)) {
+            objs = new double[forLength];
+            for (int i = 0; i < forLength; i++) {
+                ((double[]) objs)[i] = PrimaryDatas.b2d(bs, pInt.index);
+                pInt.index += 8;
             }
         } else {
-            objs = new Object[forLength];
-            String key = "class ";
-            String fieldTypeString = typeStr.substring(typeStr.indexOf(key) + key.length());
+            String key = "class [L";
+            String fieldTypeString = typeStr.substring(typeStr.indexOf(key) + key.length()).replace("/", ".");
+            fieldTypeString = fieldTypeString.substring(0, fieldTypeString.length() - 1);
+            Class<?> clazz = Class.forName(fieldTypeString);
+            objs = Array.newInstance(clazz, forLength);
+
             for (int i = 0; i < forLength; i++) {
-                objs[i] = decodeBytes(bs, Class.forName(fieldTypeString), pInt);
-                pInt.index += 2;
+                ((Object[]) objs)[i] = decodeBytes(bs, clazz, pInt);
             }
         }
 
