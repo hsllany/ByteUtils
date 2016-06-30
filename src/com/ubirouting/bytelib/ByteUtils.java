@@ -2,7 +2,6 @@ package com.ubirouting.bytelib;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -14,6 +13,15 @@ import java.util.*;
 public final class ByteUtils {
 
     static String UNKNOW = "null";
+
+    static Comparator<Field> sComparator = (o1, o2) ->
+
+    {
+        ToByte annotation = o1.getAnnotation(ToByte.class);
+        ToByte annotation2 = o2.getAnnotation(ToByte.class);
+
+        return annotation.order() - annotation2.order();
+    };
 
     private ByteUtils() {
         throw new UnsupportedOperationException("can't create this object");
@@ -58,12 +66,7 @@ public final class ByteUtils {
             }
         }
 
-        Collections.sort(fieldList, (o1, o2) -> {
-            ToByte annotation = o1.getAnnotation(ToByte.class);
-            ToByte annotation2 = o2.getAnnotation(ToByte.class);
-
-            return annotation.order() - annotation2.order();
-        });
+        Collections.sort(fieldList, sComparator);
 
         for (Field field : fieldList) {
             field.setAccessible(true);
@@ -202,29 +205,29 @@ public final class ByteUtils {
                     listBytes.add(encodeString(string));
                 }
             } else if (field.getType().equals(Byte[].class) || field.getType().equals(byte[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(length);
+                byte[] bf = new byte[length];
                 for (int i = 0; i < length; i++) {
-                    bf.put((byte) Array.get(objArrays, i));
+                    bf[i] = (byte) Array.get(objArrays, i);
                 }
-                listBytes.add(bf.array());
+                listBytes.add(bf);
             } else if (field.getType().equals(int[].class) || field.getType().equals(Integer[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(length * 4);
+                byte[] bf = new byte[length * 4];
                 for (int i = 0; i < length; i++) {
-                    bf.put(PrimaryDatas.i2b((int) Array.get(objArrays, i)));
+                    PrimaryDatas.i2b((int) Array.get(objArrays, i), bf, i * 4);
                 }
-                listBytes.add(bf.array());
+                listBytes.add(bf);
             } else if (field.getType().equals(float[].class) || field.getType().equals(Float[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(length * 4);
+                byte[] bf = new byte[length * 4];
                 for (int i = 0; i < length; i++) {
-                    bf.put(PrimaryDatas.f2b((float) Array.get(objArrays, i)));
+                    PrimaryDatas.f2b((float) Array.get(objArrays, i), bf, i * 4);
                 }
-                listBytes.add(bf.array());
+                listBytes.add(bf);
             } else if (field.getType().equals(double[].class) || field.getType().equals(Double[].class)) {
-                ByteBuffer bf = ByteBuffer.allocate(length * 8);
+                byte[] bf = new byte[length * 8];
                 for (int i = 0; i < length; i++) {
-                    bf.put(PrimaryDatas.d2b((double) Array.get(objArrays, i)));
+                    PrimaryDatas.d2b((double) Array.get(objArrays, i), bf, i * 8);
                 }
-                listBytes.add(bf.array());
+                listBytes.add(bf);
             } else {
                 for (int i = 0; i < length; i++) {
                     encodeObj(Array.get(objArrays, i), listBytes);
@@ -567,12 +570,7 @@ public final class ByteUtils {
             }
         }
 
-        Collections.sort(fieldList, (o1, o2) -> {
-            ToByte annotation = o1.getAnnotation(ToByte.class);
-            ToByte annotation2 = o2.getAnnotation(ToByte.class);
-
-            return annotation.order() - annotation2.order();
-        });
+        Collections.sort(fieldList, sComparator);
 
         List<String> furtherDecoder = new ArrayList<>();
 

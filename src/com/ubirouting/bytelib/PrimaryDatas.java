@@ -4,7 +4,7 @@ package com.ubirouting.bytelib;
  * primary type convention utilization
  *
  * @author YangTao
- * @version 1.0
+ * @version 2.0
  */
 public class PrimaryDatas {
 
