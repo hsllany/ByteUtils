@@ -14,10 +14,13 @@ public class TestClass1 {
 
     @ToByte (order = 0, description = "a")
     public int a = 1;
+
     @ToByte (order = 2, description = "c")
     protected byte c = 3;
+
     @ToByte (order = 1, description = "b")
     private short b = 2;
+
     @ToByte (order = 3, description = "d")
     private long d = 123l;
 
